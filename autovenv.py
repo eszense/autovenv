@@ -22,12 +22,17 @@ def run(*args, w=False):
 
     if not (path / 'venv' / 'Scripts' / ('python'+w+'.exe')).exists():
         venv.create(str((path / 'venv').absolute()), clear=True, with_pip=True)
-        (path / 'venv' / 'requirements.txt').touch()
 
     if (path / 'requirements.txt').exists():
+        (path / 'venv' / 'requirements.txt').touch()
         new_requirements = (path / 'requirements.txt').read_text()
         if (path / 'venv' / 'requirements.txt').read_text() != new_requirements:
-            subprocess.run([str(path / 'venv' / 'Scripts' / 'pip.exe'), 'install', '-r', str(path / 'requirements.txt')], creationflags=subprocess.CREATE_NEW_CONSOLE)
+            proc = subprocess.run([str(path / 'venv' / 'Scripts' / 'pip.exe'), \
+                'install', '-r', str(path / 'requirements.txt')], \
+                stderr=subprocess.PIPE, stdout=subprocess.PIPE)
+            if proc.returncode != 0:
+                print(proc.stderr.decode(), file=sys.stderr)
+                return 1
             (path / 'venv' / 'requirements.txt').write_text(new_requirements)
 
     subprocess.run((str(path / 'venv' / 'Scripts' / ('python'+w+'.exe')),*args[1:]))
