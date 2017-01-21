@@ -1,3 +1,7 @@
+import sys
+import bdist_msi
+sys.modules['distutils.command.bdist_msi'] = bdist_msi
+
 from distutils.core import setup
 
 setup(
