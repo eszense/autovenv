@@ -8,12 +8,15 @@ from subprocess import PIPE
 def runw(*args):
     run(*args, w=True)
 def run(*args, w=False):
+    if not args:
+        args = sys.argv
+
     w = 'w' if w else ''
     path = pathlib.Path.cwd()
 
     while not (path / 'venv').exists():
         if(path.parent == path):
-            subprocess.run(('py'+w,)+args[1:])
+            subprocess.run(('py'+w,*args[1:]))
             return
         path = path.parent
 
@@ -27,10 +30,7 @@ def run(*args, w=False):
             subprocess.run([str(path / 'venv' / 'Scripts' / 'pip.exe'), 'install', '-r', str(path / 'requirements.txt')], creationflags=subprocess.CREATE_NEW_CONSOLE)
             (path / 'venv' / 'requirements.txt').write_text(new_requirements)
 
-    subprocess.run((str(path / 'venv' / 'Scripts' / ('python'+w+'.exe')),)+args[1:])
-
-def test_activate():
-    run('','-c','import sys;print(sys.executable)')
+    subprocess.run((str(path / 'venv' / 'Scripts' / ('python'+w+'.exe')),*args[1:]))
 
 if __name__ == '__main__':
-    run(*sys.argv)
+    run()
