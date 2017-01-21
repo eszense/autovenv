@@ -2,24 +2,24 @@ import autovenv
 import unittest
 import tempfile
 import os, sys
-from contextlib import redirect_stdout
-from io import StringIO
+from pathlib import Path
+import pytest
+
+WHOAMI = 'executable.txt'
+
+def whoami():
+    autovenv.run('','-c','import sys, pathlib; pathlib.Path("%s").write_text(sys.prefix)' % WHOAMI)
 
 
-class AutovenvTest(unittest.TestCase):
-    def setUp(self):
-        self._tmpdir = tempfile.TemporaryDirectory()
-        self._lastcd = os.getcwd()
-        os.chdir(self._tmpdir.name)
-    def tearDown(self):
-        os.chdir(self._lastcd)
-        self._tmpdir.cleanup()
+def test_activate(monkeypatch, tmpdir):
+    monkeypatch.chdir(tmpdir)
+    whoami()
+    assert Path(Path(WHOAMI).read_text()).samefile(sys.base_prefix)
 
-    def test_activate(self):
-        out = StringIO()
-        with redirect_stdout(out):
-            autovenv.run('','-c','import sys;print(sys.executable)')
-        autovenv.run('','-c','import sys;print(sys.executable)')
+    os.mkdir('venv')
+    whoami()
+    assert (Path(str(tmpdir)) / 'venv').samefile(Path(WHOAMI).read_text())
+
 
 if __name__ == '__main__':
-    unittest.main()
+    pytest.main()
