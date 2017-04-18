@@ -5,6 +5,14 @@ import venv
 import subprocess
 from subprocess import PIPE
 
+def main():
+    try:
+       run()
+       return 0
+    except ParsingError as e:
+        print(e.message, file=sys.stderr)
+        return 1
+
 def runw(*args):
     run(*args, w=True)
 def run(*args, w=False):
@@ -21,7 +29,22 @@ def run(*args, w=False):
         path = path.parent
 
     if not (path / 'venv' / 'Scripts' / ('python'+w+'.exe')).exists():
-        venv.create(str((path / 'venv').absolute()), clear=True, with_pip=True)
+        if not (path / 'autovenv.ini').exists():
+            venv.create(str((path / 'venv').absolute()), clear=True, with_pip=True)
+        else:
+            from configparser import ConfigParser, ParsingError
+            config = ConfigParser()
+            try:
+                config.read(str((path / 'autovenv.ini').absolute()))
+            except ParsingError as e:
+                raise e
+            subenv = os.environ.copy()
+            subenv['PY_PYTHON'] = config['defaults']['python']
+            proc = subprocess.run( \
+                    ('py', '-c', 'import venv,sys; venv.create(sys.argv[1], clear=True, with_pip=True)', str((path / 'venv').absolute())),\
+                    stderr=subprocess.PIPE, stdout=subprocess.PIPE, env=subenv
+                )
+            
 
     if (path / 'requirements.txt').exists():
         (path / 'venv' / 'requirements.txt').touch()
@@ -38,4 +61,4 @@ def run(*args, w=False):
     subprocess.run((str(path / 'venv' / 'Scripts' / ('python'+w+'.exe')),*args[1:]))
 
 if __name__ == '__main__':
-    run()
+    main()
