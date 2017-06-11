@@ -52,7 +52,7 @@ def run(*args, w=False):
         if (path / 'venv' / 'requirements.txt').read_text() != new_requirements:
             proc = subprocess.run([str(path / 'venv' / 'Scripts' / 'pip.exe'), \
                 'install', '-r', str(path / 'requirements.txt')], \
-                stderr=subprocess.PIPE, stdout=subprocess.PIPE)
+                stderr=subprocess.PIPE, stdout=subprocess.PIPE, cwd=str(path.absolute()))
             if proc.returncode != 0:
                 print(proc.stderr.decode(), file=sys.stderr)
                 return 1

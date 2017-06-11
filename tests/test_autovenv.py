@@ -13,7 +13,11 @@ def whoami():
     autovenv.run('','-c',   'import sys, pathlib;\
                              pathlib.Path("%s").write_text(sys.prefix);\
                              pathlib.Path("%s").write_text(str(sys.version_info[0])+"."+str(sys.version_info[1]))' % (WHOAMI,VERSION))
- 
+def whoami_json():
+    autovenv.run('','-c',   'import sys, pathlib, simplejson;\
+                            pathlib.Path("%s").write_text(sys.prefix);' % WHOAMI)
+
+
 def test_activate(monkeypatch, tmpdir):
     monkeypatch.chdir(tmpdir)
     whoami()
@@ -25,7 +29,27 @@ def test_activate(monkeypatch, tmpdir):
     assert (Path(str(tmpdir)) / 'venv').samefile(Path(WHOAMI).read_text())
     assert Path(VERSION).read_text() == str(sys.version_info[0])+"."+str(sys.version_info[1])
 
-    
+def test_install(monkeypatch, tmpdir):
+    monkeypatch.chdir(tmpdir)
+    os.mkdir('venv')
+    Path('requirements.txt').write_text('simplejson')
+
+    whoami_json()
+    assert (Path(str(tmpdir)) / 'venv').samefile(Path(WHOAMI).read_text())
+
+
+def test_subdir(monkeypatch, tmpdir):
+    monkeypatch.chdir(tmpdir)
+    os.mkdir('venv')    
+    Path('requirements.txt').write_text('simplejson\n-e .')
+    Path('setup.py').write_text('from distutils.core import setup; setup(name="autovenv_test")')
+    os.mkdir('subdir')
+
+    monkeypatch.chdir('subdir')    
+    whoami_json()
+    assert (Path(str(tmpdir)) / 'venv').samefile(Path(WHOAMI).read_text())
+
+
 def test_version(monkeypatch, tmpdir):
     monkeypatch.chdir(tmpdir)
     os.mkdir('venv')
@@ -44,4 +68,4 @@ def test_error(monkeypatch, tmpdir):
     
 
 if __name__ == '__main__':
-    pytest.main()
+    pytest.main([__file__])
