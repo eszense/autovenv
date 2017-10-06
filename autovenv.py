@@ -28,7 +28,7 @@ def run(*args, w=False):
             return
         path = path.parent
 
-    if not (path / 'venv' / 'Scripts' / ('python'+w+'.exe')).exists():
+    if not (path / 'venv' / 'Scripts' / ('python'+w+'.exe')).exists(): #TODO linux compatibility venv/bin/python3
         if not (path / 'autovenv.ini').exists():
             venv.create(str((path / 'venv').absolute()), clear=True, with_pip=True)
         else:
